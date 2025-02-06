@@ -47,6 +47,10 @@
             color: red;
             font-size: 20px;
         }
+        .neutral {
+            color: #777;
+            font-size: 20px;
+        }
         .practice-questions {
             margin-top: 20px;
         }
@@ -145,7 +149,7 @@
             const proficiencyMap = {};
             studentRecords.forEach(data => {
                 if (!proficiencyMap[data.sub_topic]) {
-                    proficiencyMap[data.sub_topic] = { easy: "❌", medium: "❌", hard: "❌" };
+                    proficiencyMap[data.sub_topic] = { easy: "-", medium: "-", hard: "-" };
                 }
                 const percentageSolved = parseFloat(data.percentage_of_questions_solved.replace('%', '')) || 0;
                 const status = percentageSolved >= 50 ? "✅" : "❌";
@@ -159,9 +163,15 @@
                 if (proficiencyMap[concept]) {
                     const row = `<tr>
                         <td>${concept}</td>
-                        <td>${proficiencyMap[concept].easy}</td>
-                        <td>${proficiencyMap[concept].medium}</td>
-                        <td>${proficiencyMap[concept].hard}</td>
+                        <td class="${proficiencyMap[concept].easy === '-' ? 'neutral' : proficiencyMap[concept].easy === '✅' ? 'green' : 'red'}">
+                            ${proficiencyMap[concept].easy}
+                        </td>
+                        <td class="${proficiencyMap[concept].medium === '-' ? 'neutral' : proficiencyMap[concept].medium === '✅' ? 'green' : 'red'}">
+                            ${proficiencyMap[concept].medium}
+                        </td>
+                        <td class="${proficiencyMap[concept].hard === '-' ? 'neutral' : proficiencyMap[concept].hard === '✅' ? 'green' : 'red'}">
+                            ${proficiencyMap[concept].hard}
+                        </td>
                     </tr>`;
                     reportBody.innerHTML += row;
                 }
