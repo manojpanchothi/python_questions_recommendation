@@ -102,7 +102,7 @@
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
                 const data = await response.json();
-                console.log("Fetched Proficiency Data:", data); // Debugging log
+                console.log("Fetched Proficiency Data:", data);
                 return data;
             } catch (error) {
                 console.error('Error fetching proficiency data:', error);
@@ -125,18 +125,15 @@
                 return;
             }
 
-            // Filter all records with the same student ID
             const studentRecords = proficiencyData.filter(student => student.niat_id === studentId);
             if (studentRecords.length === 0) {
                 alert("Student not found in the database.");
                 return;
             }
 
-            // Display student name (from first record)
             document.getElementById("student-name").innerText = studentRecords[0].student_name;
             document.getElementById("student-id").innerText = studentRecords[0].niat_id;
 
-            // Define ordered list of topics based on learning sequence
             const orderedTopics = [
                 "IO_BASICS", "OPERATORS", "ARITHMETIC_OPERATORS", "ARITHMETIC_OPERATIONS",
                 "CONDITIONAL_STATEMENTS_IF_ELSE", "LOOPS_FOR", "NESTED_LOOPS", "PATTERNS",
@@ -145,14 +142,17 @@
                 "DATA_TYPE_SET", "DATA_TYPE_DICTIONARY"
             ];
 
-            // Group proficiency by concept name
             const proficiencyMap = {};
             studentRecords.forEach(data => {
                 if (!proficiencyMap[data.sub_topic]) {
                     proficiencyMap[data.sub_topic] = { easy: "-", medium: "-", hard: "-" };
                 }
-                const percentageSolved = parseFloat(data.percentage_of_questions_solved.replace('%', '')) || 0;
-                const status = percentageSolved >= 50 ? "✅" : "❌";
+                const rawPercentage = data.percentage_of_questions_solved;
+                const percentageSolved = typeof rawPercentage === "number" 
+                    ? rawPercentage 
+                    : parseFloat(String(rawPercentage).replace('%', '')) || 0;
+                console.log("Topic:", data.sub_topic, "Difficulty:", data.difficulty, "Percentage Solved:", percentageSolved);
+                const status = (percentageSolved * 100) >= 50 ? "✅" : "❌";
                 if (data.difficulty === "EASY") proficiencyMap[data.sub_topic].easy = status;
                 if (data.difficulty === "MEDIUM") proficiencyMap[data.sub_topic].medium = status;
                 if (data.difficulty === "HARD") proficiencyMap[data.sub_topic].hard = status;
