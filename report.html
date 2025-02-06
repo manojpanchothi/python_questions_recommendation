@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Proficiency Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007BFF;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            text-align: center;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+        .green {
+            color: green;
+            font-size: 20px;
+        }
+        .red {
+            color: red;
+            font-size: 20px;
+        }
+        .practice-questions {
+            margin-top: 20px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Student Proficiency Report</h1>
+        <p><strong>Name:</strong> <span id="student-name"></span></p>
+        <p><strong>Student ID:</strong> <span id="student-id"></span></p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Concept Name</th>
+                    <th>Easy</th>
+                    <th>Medium</th>
+                    <th>Hard</th>
+                </tr>
+            </thead>
+            <tbody id="report-body">
+                <!-- Data will be inserted dynamically -->
+            </tbody>
+        </table>
+
+        <div class="practice-questions">
+            <h3>Practice Questions</h3>
+            <button onclick="redirectToPractice()">View Recommended Questions</button>
+        </div>
+    </div>
+
+    <script>
+        async function fetchProficiencyData() {
+            try {
+                const response = await fetch('https://manojpanchothi.github.io/proficiency_report/student_proficiency_data.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log("Fetched Proficiency Data:", data); // Debugging log
+                return data;
+            } catch (error) {
+                console.error('Error fetching proficiency data:', error);
+                alert("Error fetching student data. Please try again later.");
+                return [];
+            }
+        }
+
+        async function loadStudentData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const studentId = urlParams.get("studentId");
+            if (!studentId) {
+                alert("Invalid student ID.");
+                return;
+            }
+
+            const proficiencyData = await fetchProficiencyData();
+            if (proficiencyData.length === 0) {
+                alert("No student data found.");
+                return;
+            }
+
+            // Filter all records with the same student ID
+            const studentRecords = proficiencyData.filter(student => student.niat_id === studentId);
+            if (studentRecords.length === 0) {
+                alert("Student not found in the database.");
+                return;
+            }
+
+            // Display student name (from first record)
+            document.getElementById("student-name").innerText = studentRecords[0].student_name;
+            document.getElementById("student-id").innerText = studentRecords[0].niat_id;
+
+            // Define ordered list of topics based on learning sequence
+            const orderedTopics = [
+                "IO_BASICS", "OPERATORS", "ARITHMETIC_OPERATORS", "ARITHMETIC_OPERATIONS",
+                "CONDITIONAL_STATEMENTS_IF_ELSE", "LOOPS_FOR", "NESTED_LOOPS", "PATTERNS",
+                "FUNCTIONS", "BUILT_IN_FUNCTIONS", "DATA_TYPE_STRING", "STRING_METHODS",
+                "STRING_OPERATIONS", "STRING_MANIPULATION", "DATA_TYPE_LIST", "LISTS",
+                "DATA_TYPE_SET", "DATA_TYPE_DICTIONARY"
+            ];
+
+            // Group proficiency by concept name
+            const proficiencyMap = {};
+            studentRecords.forEach(data => {
+                if (!proficiencyMap[data.sub_topic]) {
+                    proficiencyMap[data.sub_topic] = { easy: "❌", medium: "❌", hard: "❌" };
+                }
+                const percentageSolved = parseFloat(data.percentage_of_questions_solved.replace('%', '')) || 0;
+                const status = percentageSolved >= 50 ? "✅" : "❌";
+                if (data.difficulty === "EASY") proficiencyMap[data.sub_topic].easy = status;
+                if (data.difficulty === "MEDIUM") proficiencyMap[data.sub_topic].medium = status;
+                if (data.difficulty === "HARD") proficiencyMap[data.sub_topic].hard = status;
+            });
+
+            const reportBody = document.getElementById("report-body");
+            orderedTopics.forEach(concept => {
+                if (proficiencyMap[concept]) {
+                    const row = `<tr>
+                        <td>${concept}</td>
+                        <td>${proficiencyMap[concept].easy}</td>
+                        <td>${proficiencyMap[concept].medium}</td>
+                        <td>${proficiencyMap[concept].hard}</td>
+                    </tr>`;
+                    reportBody.innerHTML += row;
+                }
+            });
+        }
+
+        function redirectToPractice() {
+            const studentId = new URLSearchParams(window.location.search).get("studentId");
+            window.location.href = `practice_questions.html?studentId=${studentId}`;
+        }
+
+        loadStudentData();
+    </script>
+</body>
+</html>
